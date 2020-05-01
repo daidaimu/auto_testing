@@ -1,0 +1,68 @@
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="ant-jmeter-test" default="run" basedir=".">
+    <tstamp>
+        <format property="time" pattern="yyyyMMddHHmm" />
+    </tstamp>
+  
+    <!-- 需要改成自己本地的 Jmeter 目录-->
+    <property name="jmeter.home" value="/Users/Dats/Desktop/JMeter/apache-jmeter-5.1.1" />
+    <!-- jmeter生成jtl格式的结果报告的路径-->
+    <property name="jmeter.result.jtl.dir" value="/Users/Dats/Desktop/JMeter/apache-jmeter-5.1.1/TestReport/testToken/jtl" />
+  
+    <!-- jmeter生成html格式的结果报告的路径-->
+    <property name="jmeter.result.html.dir" value="/Users/Dats/Desktop/JMeter/apache-jmeter-5.1.1/TestReport/testToken/html" />
+    <!-- 生成的报告的前缀-->
+    <property name="ReportName" value="TestReport" />
+    <property name="jmeter.result.jtlName" value="${jmeter.result.jtl.dir}/${ReportName}${time}.jtl" />
+    <property name="jmeter.result.htmlName" value="${jmeter.result.html.dir}/${ReportName}${time}.html" />
+    <!-- 输出生成的报告名称和存放路径-->
+    <echo message="${jmeter.result.jtlName}"/>
+    <echo message="${jmeter.result.htmlName}"/>
+    <echo message="${jmeter.result.html.dir}"/>
+
+    <target name="run">
+        <antcall target="test"/>
+        <antcall target="report"/>
+    </target>
+
+    <!--加载jar包,解决显示时间问题-->  
+    <path id="xslt.classpath">  
+        <fileset dir="${jmeter.home}/lib" includes="xalan*.jar"/>  
+        <fileset dir="${jmeter.home}/lib" includes="serializer*.jar"/>  
+    </path> 
+    
+    <target name="test">
+        <taskdef name="jmeter" classname="org.programmerplanet.ant.taskdefs.jmeter.JMeterTask" />
+        <jmeter jmeterhome="${jmeter.home}" resultlog="${jmeter.result.jtlName}">
+            <!-- 声明要运行的脚本。"*.jmx"指包含此目录下的所有jmeter脚本-->
+            <testplans dir="/Users/Dats/Desktop/JMeter/apache-jmeter-5.1.1/TestScrip" includes="test.jmx" />
+            
+            <property name="jmeter.save.saveservice.output_format" value="xml"/>
+        </jmeter>
+    </target>
+    
+    <target name="report">
+    <tstamp> <format property="report.datestamp" pattern="yyyy-MM-dd HH:mm" /></tstamp> 
+        <xslt
+              classpathref="xslt.classpath"  
+              force="true" 
+              
+              in="${jmeter.result.jtlName}"
+              out="${jmeter.result.htmlName}"
+              style="${jmeter.home}/extras/jmeter-results-detail-report_21.xsl">
+              <!--显示dateReport的时间--> 
+              <param name="dateReport" expression="${report.datestamp}"/> 
+        </xslt>
+        <!-- 因为上面生成报告的时候，不会将相关的图片也一起拷贝至目标目录，所以，需要手动拷贝 -->
+        <copy todir="${jmeter.result.html.dir}">
+            <fileset dir="${jmeter.home}/extras">
+                <include name="collapse.png" />
+                <include name="expand.png" />
+            </fileset>
+        </copy>
+    </target>
+</project>
+```
+
